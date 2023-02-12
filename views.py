@@ -3,10 +3,10 @@ from main import app
 from model import *
 
 routes = '''
-    <p> http://localhost:5000/authors       </p>
-    <p> http://localhost:5000/authors/1    </p>
-    <p> http://localhost:5000/books        </p>
-    <p> http://localhost:5000/books/1      </p>
+    <p> http://localhost:5000/authors           </p>
+    <p> http://localhost:5000/authors/1         </p>
+    <p> http://localhost:5000/books             </p>
+    <p> http://localhost:5000/authors/1/books/  </p>
 '''
 
 
@@ -68,8 +68,8 @@ def books():
         return book.serialize(), 201
 
 
-@app.route('/books/<int:id>/', methods=['GET', 'PUT', 'DELETE'])
-def book(id):
+@app.route('/authors/<int:id>/books/', methods=['GET', 'PUT', 'DELETE'])
+def author_books(id):
     book = Book.query.get(id)
     if book:
         if request.method == 'GET':
@@ -84,3 +84,8 @@ def book(id):
             db.session.commit()
             return '', 204
     return 'não encontrado', 404
+
+
+@app.route('/authors/<int:id_author>/books/<int:id_book>', methods=['GET', 'PUT', 'DELETE'])
+def author_book(id_author, id_book):
+    pass
