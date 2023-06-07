@@ -1,6 +1,6 @@
-from flask import request, jsonify
-from main import app
-from model import *
+from flask import request
+from app.__init__ import app, db
+from app.model.model import *
 
 routes = '''
     <p> http://localhost:5000/authors           </p>
@@ -21,13 +21,28 @@ def authors():
         authors = Author.query.all()
         if authors:
             return {'authors': [author.serialize() for author in authors]}
-        return 'não encontrado', 404
+        else:
+            return 'não encontrado', 404
 
     elif request.method == 'POST':
-        name = request.json.get('name')
+        data = request.json
+        name = data.get('name')
+        books = data.get('books')
+
+        # Criação do autor
         author = Author(name=name)
         db.session.add(author)
         db.session.commit()
+
+        # Verifica se há livros para inserir
+        if books:
+            for book_data in books:
+                title = book_data.get('title')
+                book = Book(title=title, author_id=author.id)
+                db.session.add(book)
+
+            db.session.commit()
+
         return author.serialize(), 201
 
 
@@ -39,12 +54,16 @@ def author(id):
             return author.serialize()
 
         elif request.method == 'PUT':
-            name = request.json.get('name')
+            name = request.json.get('author')
             author.name = name
             db.session.commit()
             return author.serialize()
 
         elif request.method == 'DELETE':
+            books = Book.query.filter_by(author_id=id).all()
+            for book in books:
+                db.session.delete(book)
+
             db.session.delete(author)
             db.session.commit()
             return '', 204
@@ -71,6 +90,7 @@ def books():
 @app.route('/authors/<int:id>/books/', methods=['GET', 'PUT', 'DELETE'])
 def author_books(id):
     book = Book.query.get(id)
+
     if book:
         if request.method == 'GET':
             return book.serialize()
